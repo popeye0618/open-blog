@@ -16,7 +16,7 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Pretendard', 'Inter', 'system-ui', 'sans-serif'],
-				display: ['Fraunces', 'serif'],
+				display: ['Pretendard', 'Inter', 'system-ui', 'sans-serif'],
 				mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
 			},
 			boxShadow: {
