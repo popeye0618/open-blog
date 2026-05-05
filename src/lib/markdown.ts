@@ -1,5 +1,5 @@
 import { Marked, type Tokens } from 'marked';
-import { createHighlighter } from 'shiki';
+import { createHighlighter, createJavaScriptRegexEngine } from 'shiki';
 import { DOMPurify } from './sanitize';
 
 const theme = 'rose-pine-dawn';
@@ -144,6 +144,7 @@ export function extractToc(md: string): { id: string; text: string; depth: 2 | 3
 
 function getHighlighter(): Promise<Highlighter> {
   highlighterPromise ??= createHighlighter({
+    engine: createJavaScriptRegexEngine(),
     themes: [theme],
     langs: [...langs],
   });
