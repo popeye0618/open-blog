@@ -24,6 +24,17 @@ function parseTags(value: string): string[] {
 ---
 
 <article class="not-prose h-full rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft transition hover:rotate-[0.3deg] hover:bg-white/70">
+  {post.coverImage && (
+    <a class="mb-4 block overflow-hidden rounded-lg border border-ink/10 bg-cream/60" href={`/posts/${post.slug}`} aria-label={post.title}>
+      <img
+        class="aspect-[16/9] w-full object-cover"
+        src={post.coverImage}
+        alt=""
+        loading="lazy"
+      />
+    </a>
+  )}
+
   <div class="mb-3 flex items-center gap-2 text-xs font-semibold text-ink/55">
     {post.pinned ? <span aria-label="Pinned">📌</span> : null}
     {date && <time datetime={post.publishedAt ?? undefined}>{date}</time>}

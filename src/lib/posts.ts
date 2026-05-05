@@ -14,13 +14,14 @@ const postSummaryFields = {
   description: posts.description,
   tags: posts.tags,
   lang: posts.lang,
+  coverImage: posts.coverImage,
   publishedAt: posts.publishedAt,
   pinned: posts.pinned,
 };
 
 export type PostSummary = Pick<
   Post,
-  'id' | 'slug' | 'title' | 'description' | 'tags' | 'lang' | 'publishedAt' | 'pinned'
+  'id' | 'slug' | 'title' | 'description' | 'tags' | 'lang' | 'coverImage' | 'publishedAt' | 'pinned'
 >;
 
 export type SearchResult = PostSummary & {

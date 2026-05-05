@@ -60,6 +60,14 @@ function parseTags(value: string): string[] {
           </div>
         </header>
 
+        {post.coverImage && (
+          <img
+            class="not-prose mb-8 aspect-[16/9] w-full rounded-lg border border-ink/10 object-cover shadow-soft"
+            src={post.coverImage}
+            alt=""
+          />
+        )}
+
         <hr />
         <div class="mt-8" set:html={html} />
 
