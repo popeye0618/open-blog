@@ -1,8 +1,9 @@
-# popeye0618 blog (custom Astro + Cloudflare blog template)
+# open-blog (custom Astro + Cloudflare blog template)
 
 > 파스텔 일러스트 톤의 개인 테크 블로그. Astro SSR + Cloudflare D1 + R2 + Drizzle + Turnstile + (옵션) Cloudflare Access. 호스팅 비용 0원.
 
-[데모 스크린샷 자리 - 비워둠]
+<img width="1079" height="1050" alt="open-blog pages dev_" src="https://github.com/user-attachments/assets/c6b9ed0c-e910-48a9-bae1-6389d3cf7c2c" />
+
 
 ## ✨ 특징
 
