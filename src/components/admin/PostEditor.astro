@@ -133,24 +133,39 @@ function toDatetimeLocal(value: string): string {
         </label>
       </div>
 
-      <label class="block text-sm font-semibold text-ink/70">
-        커버 이미지
-        <input
-          class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
-          type="url"
-          name="coverImage"
-          value={initial?.coverImage ?? ''}
-          data-cover-input
-        />
-      </label>
-
-      <div class="rounded-lg border border-ink/10 bg-white/40 p-3">
-        <p class="text-sm text-ink/50" data-cover-preview-message>이미지 URL을 입력하면 미리보기가 표시됩니다.</p>
-        <img
-          class="hidden max-h-48 w-full rounded-lg border border-ink/10 object-cover"
-          alt="커버 이미지 미리보기"
-          data-cover-preview-image
-        />
+      <div class="block text-sm font-semibold text-ink/70">
+        <span>커버 이미지</span>
+        <input type="hidden" name="coverImage" value={initial?.coverImage ?? ''} data-cover-input />
+        <input class="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-cover-file-input />
+        <div
+          class="relative mt-2 overflow-hidden rounded-lg border border-dashed border-ink/20 bg-white/45 shadow-soft outline-none transition focus:border-peach focus:ring-2 focus:ring-peach/50"
+          role="button"
+          tabindex="0"
+          aria-label="커버 이미지 업로드"
+          data-cover-dropzone
+        >
+          <div class={`flex min-h-44 flex-col items-center justify-center gap-1 px-4 py-8 text-center ${initial?.coverImage ? 'hidden' : ''}`} data-cover-empty>
+            <p class="text-sm font-bold text-ink/70">이미지를 드롭하거나 클릭해서 업로드</p>
+            <p class="text-xs font-semibold text-ink/45">PNG, JPG, WEBP, GIF · 최대 10MB</p>
+          </div>
+          <div class={`${initial?.coverImage ? '' : 'hidden'}`} data-cover-filled>
+            <img
+              class="max-h-64 w-full object-cover"
+              src={initial?.coverImage ?? ''}
+              alt="커버 이미지 미리보기"
+              data-cover-preview-image
+            />
+            <div class="absolute bottom-3 right-3 rounded-full bg-white/85 px-3 py-1.5 text-xs font-bold text-ink/65 shadow-soft">
+              <button class="transition hover:text-ink" type="button" aria-label="커버 이미지 재업로드" data-cover-reupload>재업로드</button>
+              <span class="mx-1 text-ink/35">·</span>
+              <button class="transition hover:text-ink" type="button" aria-label="커버 이미지 제거" data-cover-remove>제거</button>
+            </div>
+          </div>
+          <div class="absolute inset-0 hidden items-center justify-center bg-white/70 text-sm font-bold text-ink" data-cover-uploading>
+            업로드 중...
+          </div>
+        </div>
+        <p class="mt-2 hidden text-sm font-semibold text-pink" data-cover-error></p>
       </div>
 
       <label class="flex items-center gap-2 text-sm font-semibold text-ink/70">
@@ -158,15 +173,42 @@ function toDatetimeLocal(value: string): string {
         상단 고정
       </label>
 
-      <label class="block text-sm font-semibold text-ink/70">
-        본문
+      <div class="block text-sm font-semibold text-ink/70">
+        <span>본문</span>
+        <div class="mt-2 flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-ink/10 bg-white/55 px-2 py-2 shadow-soft">
+          <button class="rounded-md px-2 py-1 text-xs font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="제목 1 토글" data-md-action="heading" data-md-prefix="# ">H1</button>
+          <button class="rounded-md px-2 py-1 text-xs font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="제목 2 토글" data-md-action="heading" data-md-prefix="## ">H2</button>
+          <button class="rounded-md px-2 py-1 text-xs font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="제목 3 토글" data-md-action="heading" data-md-prefix="### ">H3</button>
+          <button class="rounded-md px-2 py-1 text-xs font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="제목 4 토글" data-md-action="heading" data-md-prefix="#### ">H4</button>
+          <span class="mx-1 h-5 w-px bg-ink/10" aria-hidden="true"></span>
+          <button class="rounded-md px-2 py-1 text-sm font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="굵게" data-md-action="bold">B</button>
+          <button class="rounded-md px-2 py-1 text-sm font-black italic text-ink/70 transition hover:bg-butter/40" type="button" aria-label="기울임" data-md-action="italic">I</button>
+          <button class="rounded-md px-2 py-1 text-sm font-black text-ink/70 line-through transition hover:bg-butter/40" type="button" aria-label="취소선" data-md-action="strike">S</button>
+          <span class="mx-1 h-5 w-px bg-ink/10" aria-hidden="true"></span>
+          <button class="rounded-md px-2 py-1 text-sm font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="인용 토글" data-md-action="quote">&quot;</button>
+          <button class="rounded-md p-1.5 text-ink/70 transition hover:bg-butter/40" type="button" aria-label="링크 삽입" data-md-action="link">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button class="rounded-md p-1.5 text-ink/70 transition hover:bg-butter/40" type="button" aria-label="이미지 업로드" data-md-action="image">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="m3 16 5-5 4 4 2-2 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M16 9h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="rounded-md px-2 py-1 text-xs font-black text-ink/70 transition hover:bg-butter/40" type="button" aria-label="코드 삽입" data-md-action="code">&lt;&gt;</button>
+          <input class="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-body-image-input />
+        </div>
         <textarea
-          class="mt-2 min-h-[24rem] w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          class="min-h-[24rem] w-full rounded-b-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
           name="bodyMd"
           required
           data-body-input
         >{initial?.bodyMd ?? ''}</textarea>
-      </label>
+      </div>
 
       <p class="hidden rounded-lg border border-pink/60 bg-pink/20 px-3 py-2 text-sm font-semibold text-ink" data-error-message></p>
 
@@ -198,12 +240,21 @@ function toDatetimeLocal(value: string): string {
   const slugInput = document.querySelector('[data-slug-input]');
   const bodyInput = document.querySelector('[data-body-input]');
   const coverInput = document.querySelector('[data-cover-input]');
+  const coverFileInput = document.querySelector('[data-cover-file-input]');
+  const coverDropzone = document.querySelector('[data-cover-dropzone]');
+  const coverEmpty = document.querySelector('[data-cover-empty]');
+  const coverFilled = document.querySelector('[data-cover-filled]');
   const coverPreviewImage = document.querySelector('[data-cover-preview-image]');
-  const coverPreviewMessage = document.querySelector('[data-cover-preview-message]');
+  const coverUploading = document.querySelector('[data-cover-uploading]');
+  const coverError = document.querySelector('[data-cover-error]');
+  const coverReupload = document.querySelector('[data-cover-reupload]');
+  const coverRemove = document.querySelector('[data-cover-remove]');
+  const bodyImageInput = document.querySelector('[data-body-image-input]');
   const preview = document.getElementById('preview');
   const errorMessage = document.querySelector('[data-error-message]');
   let slugTouched = Boolean(slugInput instanceof HTMLInputElement && slugInput.value);
   let previewTimer = 0;
+  let coverUploadInFlight = false;
 
   if (slugInput instanceof HTMLInputElement) {
     slugInput.addEventListener('input', () => {
@@ -233,23 +284,31 @@ function toDatetimeLocal(value: string): string {
     });
   }
 
-  if (
-    coverInput instanceof HTMLInputElement &&
-    coverPreviewImage instanceof HTMLImageElement &&
-    coverPreviewMessage instanceof HTMLElement
-  ) {
-    coverPreviewImage.addEventListener('load', () => {
-      coverPreviewMessage.classList.add('hidden');
-      coverPreviewImage.classList.remove('hidden');
-    });
+  document.querySelectorAll('[data-md-action]').forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
 
-    coverPreviewImage.addEventListener('error', () => {
-      showCoverPreviewMessage('이미지를 불러올 수 없습니다.');
+    button.addEventListener('click', () => {
+      handleMarkdownAction(button);
     });
+  });
 
-    coverInput.addEventListener('input', updateCoverPreview);
-    updateCoverPreview();
+  if (bodyImageInput instanceof HTMLInputElement) {
+    bodyImageInput.addEventListener('change', async () => {
+      const file = bodyImageInput.files?.[0];
+      bodyImageInput.value = '';
+
+      if (!file) return;
+
+      try {
+        const url = await uploadImage(file);
+        insertAtCursor(`![](${url})`);
+      } catch (error) {
+        showError(error instanceof Error ? error.message : 'upload_failed');
+      }
+    });
   }
+
+  setupCoverUpload();
 
   if (form instanceof HTMLFormElement) {
     form.addEventListener('submit', async (event) => {
@@ -311,47 +370,288 @@ function toDatetimeLocal(value: string): string {
     });
   }
 
-  function updateCoverPreview() {
+  function setupCoverUpload() {
+    if (
+      !(coverInput instanceof HTMLInputElement) ||
+      !(coverFileInput instanceof HTMLInputElement) ||
+      !(coverDropzone instanceof HTMLElement) ||
+      !(coverReupload instanceof HTMLButtonElement) ||
+      !(coverRemove instanceof HTMLButtonElement)
+    ) {
+      return;
+    }
+
+    coverDropzone.addEventListener('click', () => {
+      openCoverFilePicker();
+    });
+
+    coverDropzone.addEventListener('keydown', (event) => {
+      if (event.target !== coverDropzone) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openCoverFilePicker();
+    });
+
+    coverDropzone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      if (!coverUploadInFlight) {
+        coverDropzone.classList.add('border-peach', 'bg-peach/10');
+      }
+    });
+
+    coverDropzone.addEventListener('dragleave', () => {
+      coverDropzone.classList.remove('border-peach', 'bg-peach/10');
+    });
+
+    coverDropzone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      coverDropzone.classList.remove('border-peach', 'bg-peach/10');
+      if (coverUploadInFlight) return;
+
+      const file = event.dataTransfer?.files[0];
+      if (file) {
+        void uploadCoverFile(file);
+      }
+    });
+
+    coverFileInput.addEventListener('change', () => {
+      const file = coverFileInput.files?.[0];
+      coverFileInput.value = '';
+
+      if (file) {
+        void uploadCoverFile(file);
+      }
+    });
+
+    coverReupload.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openCoverFilePicker();
+    });
+
+    coverRemove.addEventListener('click', (event) => {
+      event.stopPropagation();
+      setCoverValue('');
+      hideCoverError();
+    });
+  }
+
+  function openCoverFilePicker() {
+    if (coverUploadInFlight || !(coverFileInput instanceof HTMLInputElement)) return;
+    coverFileInput.click();
+  }
+
+  async function uploadCoverFile(file) {
+    setCoverUploading(true);
+    hideCoverError();
+
+    try {
+      const url = await uploadImage(file);
+      setCoverValue(url);
+    } catch (error) {
+      showCoverError(error instanceof Error ? error.message : 'upload_failed');
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
+  function setCoverValue(url) {
     if (
       !(coverInput instanceof HTMLInputElement) ||
       !(coverPreviewImage instanceof HTMLImageElement) ||
-      !(coverPreviewMessage instanceof HTMLElement)
+      !(coverEmpty instanceof HTMLElement) ||
+      !(coverFilled instanceof HTMLElement)
     ) {
       return;
     }
 
-    const url = coverInput.value.trim();
+    coverInput.value = url;
 
     if (!url) {
-      showCoverPreviewMessage('이미지 URL을 입력하면 미리보기가 표시됩니다.');
+      coverPreviewImage.removeAttribute('src');
+      coverFilled.classList.add('hidden');
+      coverEmpty.classList.remove('hidden');
       return;
     }
 
-    try {
-      new URL(url);
-    } catch {
-      showCoverPreviewMessage('이미지를 불러올 수 없습니다.');
-      return;
-    }
-
-    coverPreviewImage.classList.add('hidden');
-    coverPreviewMessage.textContent = '이미지를 불러오는 중입니다.';
-    coverPreviewMessage.classList.remove('hidden');
     coverPreviewImage.src = url;
+    coverEmpty.classList.add('hidden');
+    coverFilled.classList.remove('hidden');
   }
 
-  function showCoverPreviewMessage(message) {
-    if (
-      !(coverPreviewImage instanceof HTMLImageElement) ||
-      !(coverPreviewMessage instanceof HTMLElement)
-    ) {
+  function setCoverUploading(uploading) {
+    coverUploadInFlight = uploading;
+
+    if (coverUploading instanceof HTMLElement) {
+      coverUploading.classList.toggle('hidden', !uploading);
+      coverUploading.classList.toggle('flex', uploading);
+    }
+  }
+
+  function showCoverError(message) {
+    if (!(coverError instanceof HTMLElement)) return;
+    coverError.textContent = message;
+    coverError.classList.remove('hidden');
+  }
+
+  function hideCoverError() {
+    if (!(coverError instanceof HTMLElement)) return;
+    coverError.textContent = '';
+    coverError.classList.add('hidden');
+  }
+
+  function handleMarkdownAction(button) {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+
+    const action = button.dataset.mdAction;
+
+    if (action === 'heading') {
+      toggleCurrentLine(button.dataset.mdPrefix ?? '');
       return;
     }
 
-    coverPreviewImage.classList.add('hidden');
-    coverPreviewImage.removeAttribute('src');
-    coverPreviewMessage.textContent = message;
-    coverPreviewMessage.classList.remove('hidden');
+    if (action === 'bold') {
+      wrapSelection('**');
+      return;
+    }
+
+    if (action === 'italic') {
+      wrapSelection('*');
+      return;
+    }
+
+    if (action === 'strike') {
+      wrapSelection('~~');
+      return;
+    }
+
+    if (action === 'quote') {
+      toggleCurrentLine('> ');
+      return;
+    }
+
+    if (action === 'link') {
+      insertLink();
+      return;
+    }
+
+    if (action === 'image' && bodyImageInput instanceof HTMLInputElement) {
+      bodyImageInput.click();
+      return;
+    }
+
+    if (action === 'code') {
+      insertCode();
+    }
+  }
+
+  function toggleCurrentLine(prefix) {
+    if (!(bodyInput instanceof HTMLTextAreaElement) || !prefix) return;
+
+    const value = bodyInput.value;
+    const cursor = bodyInput.selectionStart;
+    const lineStart = value.lastIndexOf('\n', Math.max(0, cursor - 1)) + 1;
+    const hasPrefix = value.slice(lineStart, lineStart + prefix.length) === prefix;
+    const nextCursor = hasPrefix
+      ? Math.max(lineStart, cursor - prefix.length)
+      : cursor + prefix.length;
+
+    bodyInput.setRangeText(hasPrefix ? '' : prefix, lineStart, lineStart + (hasPrefix ? prefix.length : 0), 'preserve');
+    bodyInput.setSelectionRange(nextCursor, nextCursor);
+    bodyInput.focus();
+    dispatchBodyInput();
+  }
+
+  function wrapSelection(marker) {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+
+    const start = bodyInput.selectionStart;
+    const end = bodyInput.selectionEnd;
+    const selected = bodyInput.value.slice(start, end);
+
+    bodyInput.setRangeText(`${marker}${selected}${marker}`, start, end, 'end');
+
+    if (!selected) {
+      const cursor = start + marker.length;
+      bodyInput.setSelectionRange(cursor, cursor);
+    } else {
+      bodyInput.setSelectionRange(start, start + marker.length + selected.length + marker.length);
+    }
+
+    bodyInput.focus();
+    dispatchBodyInput();
+  }
+
+  function insertLink() {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+
+    const url = prompt('링크 URL')?.trim();
+    if (!url) return;
+
+    const start = bodyInput.selectionStart;
+    const end = bodyInput.selectionEnd;
+    const selected = bodyInput.value.slice(start, end);
+    const markdown = `[${selected}](${url})`;
+    const urlStart = start + selected.length + 3;
+
+    bodyInput.setRangeText(markdown, start, end, 'end');
+    bodyInput.setSelectionRange(urlStart, urlStart + url.length);
+    bodyInput.focus();
+    dispatchBodyInput();
+  }
+
+  function insertAtCursor(markdown) {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+
+    const start = bodyInput.selectionStart;
+    const end = bodyInput.selectionEnd;
+    bodyInput.setRangeText(markdown, start, end, 'end');
+    bodyInput.setSelectionRange(start + markdown.length, start + markdown.length);
+    bodyInput.focus();
+    dispatchBodyInput();
+  }
+
+  function insertCode() {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+
+    const start = bodyInput.selectionStart;
+    const end = bodyInput.selectionEnd;
+    const selected = bodyInput.value.slice(start, end);
+
+    if (selected.includes('\n')) {
+      bodyInput.setRangeText(`\n\`\`\`\n${selected}\n\`\`\`\n`, start, end, 'end');
+      bodyInput.focus();
+      dispatchBodyInput();
+      return;
+    }
+
+    bodyInput.setRangeText(`\`${selected}\``, start, end, 'end');
+
+    if (!selected) {
+      bodyInput.setSelectionRange(start + 1, start + 1);
+    }
+
+    bodyInput.focus();
+    dispatchBodyInput();
+  }
+
+  async function uploadImage(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `upload_failed_${res.status}`);
+    }
+
+    const { url } = await res.json();
+    return url;
+  }
+
+  function dispatchBodyInput() {
+    if (!(bodyInput instanceof HTMLTextAreaElement)) return;
+    bodyInput.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   function slugify(value) {

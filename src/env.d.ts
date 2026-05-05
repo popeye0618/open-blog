@@ -16,6 +16,7 @@ declare global {
 
 interface Env {
   DB: D1Database;
+  UPLOADS: R2Bucket;
   PUBLIC_SITE_URL?: string;
   AUTH_MODE?: 'cf_access' | 'password';
   OWNER_EMAIL?: string;

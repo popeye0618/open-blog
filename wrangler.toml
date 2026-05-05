@@ -14,6 +14,12 @@ database_id = "bc42db72-4835-48b0-8cba-6b08ed58f39a"
 preview_database_id = "bc42db72-4835-48b0-8cba-6b08ed58f39a"
 migrations_dir = "./drizzle"
 
+# Run `wrangler r2 bucket create blog-uploads` before deploying.
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "blog-uploads"
+preview_bucket_name = "blog-uploads"
+
 # 평문 환경변수. 비밀이 아닌 값만 여기에 둔다.
 # 비밀(JWT_SECRET, IP_HASH_SALT, ADMIN_PASSWORD_HASH, TURNSTILE_SECRET)은
 # Cloudflare 대시보드 Settings → Variables and Secrets → Secret으로 추가한다.
@@ -22,5 +28,4 @@ PUBLIC_SITE_URL = "https://open-blog.pages.dev/"
 OWNER_EMAIL = "popeye0618@gmail.com"
 OWNER_NAME = "popeye0618"
 AUTH_MODE = "password"
-# Cloudflare 공식 테스트용 Turnstile site key (항상 통과). 커스텀 도메인 붙이면 실제 키로 교체.
-PUBLIC_TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+PUBLIC_TURNSTILE_SITE_KEY = "0x4AAAAAADJsQjEVCQzN9woz"
