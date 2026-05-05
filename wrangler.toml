@@ -10,6 +10,6 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "blog"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
-preview_database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "bc42db72-4835-48b0-8cba-6b08ed58f39a"
+preview_database_id = "bc42db72-4835-48b0-8cba-6b08ed58f39a"
 migrations_dir = "./drizzle"
