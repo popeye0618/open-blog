@@ -37,7 +37,7 @@ const ogUrl = new URL(Astro.url.pathname, siteUrl).toString();
 const pageTitle = title ? `${title} · ${siteTitle}` : siteTitle;
 const footerMd = getSetting(settings, 'footer_md');
 const footerFallback = `© ${siteTitle}. Built with Astro + Cloudflare.`;
-const mainClass = `prose prose-pastel mx-auto px-4 py-12 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`;
+const mainClass = `mx-auto px-4 py-12 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`;
 ---
 
 <!doctype html>

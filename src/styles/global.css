@@ -55,12 +55,20 @@ body {
 		@apply relative my-6 overflow-hidden rounded-lg border border-lavender/50 bg-white/60 shadow-soft;
 	}
 
+	.prose-pastel figure.code-block {
+		@apply mb-5;
+	}
+
 	.code-block figcaption {
 		@apply absolute right-3 top-2 rounded-full bg-butter/80 px-2 py-0.5 font-mono text-xs font-semibold text-ink/60;
 	}
 
 	.code-block pre {
 		@apply pt-8;
+	}
+
+	.prose-pastel figure.code-block pre {
+		@apply px-5 pb-4 pt-8;
 	}
 }
 

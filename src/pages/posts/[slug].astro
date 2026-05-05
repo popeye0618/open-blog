@@ -44,7 +44,7 @@ function parseTags(value: string): string[] {
 
 {post ? (
   <RootLayout title={post.title} description={post.description ?? undefined} lang={lang} ogImageSlug={post.slug} wide>
-    <div class="not-prose lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-10">
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-10">
       <article class="prose prose-pastel min-w-0 max-w-none">
         <header class="not-prose mb-8">
           <h1 class="font-display text-4xl font-bold leading-tight text-ink sm:text-5xl">{post.title}</h1>
@@ -61,7 +61,7 @@ function parseTags(value: string): string[] {
         </header>
 
         <hr />
-        <div set:html={html} />
+        <div class="mt-8" set:html={html} />
 
         <CommentList comments={comments} />
         <CommentForm postId={post.id} siteKey={turnstileSiteKey} />
