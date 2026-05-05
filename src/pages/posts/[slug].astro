@@ -52,6 +52,7 @@ function parseTags(value: string): string[] {
             {date && <time datetime={post.publishedAt ?? undefined}>{date}</time>}
             <span class="rounded-full bg-mint/60 px-2.5 py-1 text-xs font-semibold text-ink/70">{post.lang}</span>
             <ViewCounter slug={post.slug} initialCount={initialViewCount} />
+            {post.series && <span class="rounded-full bg-lavender/45 px-2.5 py-1 text-xs font-semibold text-ink/70">시리즈 · {post.series}</span>}
             {tags.map((tag) => (
               <a class="rounded-full bg-butter/70 px-2.5 py-1 text-xs font-semibold text-ink/70 no-underline transition hover:bg-peach/70" href={`/tags/${tag}`}>
                 #{tag}

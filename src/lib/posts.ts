@@ -13,6 +13,7 @@ const postSummaryFields = {
   title: posts.title,
   description: posts.description,
   tags: posts.tags,
+  series: posts.series,
   lang: posts.lang,
   coverImage: posts.coverImage,
   publishedAt: posts.publishedAt,
@@ -21,7 +22,7 @@ const postSummaryFields = {
 
 export type PostSummary = Pick<
   Post,
-  'id' | 'slug' | 'title' | 'description' | 'tags' | 'lang' | 'coverImage' | 'publishedAt' | 'pinned'
+  'id' | 'slug' | 'title' | 'description' | 'tags' | 'series' | 'lang' | 'coverImage' | 'publishedAt' | 'pinned'
 >;
 
 export type SearchResult = PostSummary & {
@@ -35,6 +36,7 @@ type SearchRow = {
   title: string;
   description: string | null;
   tags: string;
+  series: string | null;
   lang: string;
   cover_image: string | null;
   published_at: string | null;
@@ -128,6 +130,7 @@ export async function searchPublishedPosts(
       p.title,
       p.description,
       p.tags,
+      p.series,
       p.lang,
       p.cover_image,
       p.published_at,
@@ -148,6 +151,7 @@ export async function searchPublishedPosts(
     title: row.title,
     description: row.description,
     tags: row.tags,
+    series: row.series,
     lang: row.lang,
     coverImage: row.cover_image,
     publishedAt: row.published_at,

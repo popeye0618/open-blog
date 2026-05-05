@@ -23,34 +23,39 @@ function parseTags(value: string): string[] {
 }
 ---
 
-<article class="not-prose h-full rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft transition hover:rotate-[0.3deg] hover:bg-white/70">
+<article class="not-prose group relative h-full cursor-pointer rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft transition hover:rotate-[0.3deg] hover:bg-white/70">
+  <a class="absolute inset-0 z-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-peach" href={`/posts/${post.slug}`} aria-label={`${post.title} 읽기`}>
+    <span class="sr-only">{post.title}</span>
+  </a>
+
   {post.coverImage && (
-    <a class="mb-4 block overflow-hidden rounded-lg border border-ink/10 bg-cream/60" href={`/posts/${post.slug}`} aria-label={post.title}>
+    <div class="pointer-events-none relative z-10 mb-4 overflow-hidden rounded-lg border border-ink/10 bg-cream/60">
       <img
         class="aspect-[16/9] w-full object-cover"
         src={post.coverImage}
         alt=""
         loading="lazy"
       />
-    </a>
+    </div>
   )}
 
-  <div class="mb-3 flex items-center gap-2 text-xs font-semibold text-ink/55">
+  <div class="pointer-events-none relative z-10 mb-3 flex items-center gap-2 text-xs font-semibold text-ink/55">
     {post.pinned ? <span aria-label="Pinned">📌</span> : null}
     {date && <time datetime={post.publishedAt ?? undefined}>{date}</time>}
     <span class="rounded-full bg-mint/60 px-2 py-0.5 text-ink/70">{post.lang}</span>
+    {post.series && <span class="rounded-full bg-lavender/45 px-2 py-0.5 text-ink/70">시리즈 · {post.series}</span>}
   </div>
 
-  <h2 class="mb-2 font-display text-2xl font-bold leading-tight">
-    <a class="text-ink no-underline hover:decoration-peach hover:underline" href={`/posts/${post.slug}`}>
+  <h2 class="pointer-events-none relative z-10 mb-2 font-display text-2xl font-bold leading-tight">
+    <span class="text-ink no-underline group-hover:decoration-peach group-hover:underline">
       {post.title}
-    </a>
+    </span>
   </h2>
 
-  {post.description && <p class="line-clamp-2 text-sm leading-6 text-ink/70">{post.description}</p>}
+  {post.description && <p class="pointer-events-none relative z-10 line-clamp-2 text-sm leading-6 text-ink/70">{post.description}</p>}
 
   {tags.length > 0 && (
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="relative z-20 mt-4 flex flex-wrap gap-2">
       {tags.map((tag) => (
         <a class="rounded-full bg-butter/70 px-2.5 py-1 text-xs font-semibold text-ink/70 no-underline transition hover:bg-peach/70" href={`/tags/${encodeURIComponent(tag)}`}>
           #{tag}
