@@ -46,7 +46,7 @@ type SearchRow = {
 
 export async function listPublishedPosts(
   db: DB,
-  { limit = 20 }: { limit?: number } = {},
+  { limit = 20, offset = 0 }: { limit?: number; offset?: number } = {},
 ): Promise<PostSummary[]> {
   return db
     .select(postSummaryFields)
@@ -54,7 +54,18 @@ export async function listPublishedPosts(
     .where(publishedFilter())
     .orderBy(desc(posts.pinned), desc(posts.publishedAt))
     .limit(limit)
+    .offset(offset)
     .all();
+}
+
+export async function countPublishedPosts(db: DB): Promise<number> {
+  const row = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(posts)
+    .where(publishedFilter())
+    .get();
+
+  return Number(row?.count ?? 0);
 }
 
 export async function listPublishedPostsByTag(db: DB, tag: string): Promise<PostSummary[]> {
@@ -64,6 +75,31 @@ export async function listPublishedPostsByTag(db: DB, tag: string): Promise<Post
     .where(and(publishedFilter(), sql`${posts.tags} LIKE '%' || '"' || ${tag} || '"' || '%'`))
     .orderBy(desc(posts.pinned), desc(posts.publishedAt))
     .all();
+}
+
+export async function listPublishedPostsBySeries(
+  db: DB,
+  series: string,
+  { limit = 20, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<PostSummary[]> {
+  return db
+    .select(postSummaryFields)
+    .from(posts)
+    .where(and(publishedFilter(), eq(posts.series, series)))
+    .orderBy(desc(posts.pinned), desc(posts.publishedAt))
+    .limit(limit)
+    .offset(offset)
+    .all();
+}
+
+export async function countPublishedPostsBySeries(db: DB, series: string): Promise<number> {
+  const row = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(posts)
+    .where(and(publishedFilter(), eq(posts.series, series)))
+    .get();
+
+  return Number(row?.count ?? 0);
 }
 
 export async function getPostBySlug(db: DB, slug: string): Promise<Post | null> {
@@ -176,6 +212,27 @@ export async function listAllTags(db: DB): Promise<Array<{ tag: string; count: n
 
   return Array.from(counts, ([tag, count]) => ({ tag, count })).sort(
     (a, b) => b.count - a.count || a.tag.localeCompare(b.tag),
+  );
+}
+
+export async function listAllSeries(db: DB): Promise<Array<{ series: string; count: number }>> {
+  const rows = await db
+    .select({ series: posts.series })
+    .from(posts)
+    .where(publishedFilter())
+    .all();
+  const counts = new Map<string, number>();
+
+  for (const row of rows) {
+    const series = row.series?.trim();
+
+    if (series) {
+      counts.set(series, (counts.get(series) ?? 0) + 1);
+    }
+  }
+
+  return Array.from(counts, ([series, count]) => ({ series, count })).sort(
+    (a, b) => b.count - a.count || a.series.localeCompare(b.series),
   );
 }
 

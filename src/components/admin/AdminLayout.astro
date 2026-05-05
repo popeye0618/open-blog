@@ -12,6 +12,7 @@ const authMode = Astro.locals.runtime.env.AUTH_MODE ?? 'cf_access';
 const pageTitle = `${title} · Admin`;
 const containerClass = `mx-auto px-4 py-8 lg:px-8 lg:py-10 ${wide ? 'max-w-7xl' : 'max-w-5xl'}`;
 const navItems = [
+  { href: '/', label: '블로그 홈' },
   { href: '/admin', label: '대시보드' },
   { href: '/admin/posts', label: '글' },
   { href: '/admin/comments', label: '댓글' },

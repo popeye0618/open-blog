@@ -2,13 +2,28 @@
 import PostCard from '@/components/PostCard.astro';
 import { getDb } from '@/db/client';
 import RootLayout from '@/layouts/RootLayout.astro';
-import { listPublishedPosts } from '@/lib/posts';
+import { countPublishedPosts, listAllSeries, listPublishedPosts } from '@/lib/posts';
 import { getSetting, getSettings } from '@/lib/settings';
 
 const db = getDb(Astro.locals.runtime.env);
 const settings = await getSettings(db, Astro.locals);
 const siteDescription = getSetting(settings, 'site_description', '기술과 생각을 기록하는 곳');
-const posts = await listPublishedPosts(db, { limit: 20 });
+const pageSize = 10;
+const requestedPage = Number(Astro.url.searchParams.get('page') ?? 1);
+const totalPosts = await countPublishedPosts(db);
+const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+const currentPage = Number.isInteger(requestedPage) && requestedPage > 0
+	? Math.min(requestedPage, totalPages)
+	: 1;
+const posts = await listPublishedPosts(db, {
+	limit: pageSize,
+	offset: (currentPage - 1) * pageSize,
+});
+const seriesList = await listAllSeries(db);
+
+function pageHref(page: number): string {
+	return page === 1 ? '/' : `/?page=${page}`;
+}
 ---
 
 <RootLayout description={siteDescription}>
@@ -19,6 +34,23 @@ const posts = await listPublishedPosts(db, { limit: 20 });
 		</h1>
 	</section>
 
+	{seriesList.length > 0 && (
+		<section class="not-prose mb-10 rounded-lg border border-ink/10 bg-white/45 p-5 shadow-soft" aria-label="시리즈 목록">
+			<h2 class="mb-3 font-display text-2xl font-bold text-ink">시리즈</h2>
+			<div class="flex flex-wrap gap-2">
+				{seriesList.map((item) => (
+					<a
+						class="rounded-full bg-lavender/45 px-3 py-1.5 text-sm font-semibold text-ink/70 no-underline transition hover:bg-lavender/70"
+						href={`/series/${encodeURIComponent(item.series)}`}
+					>
+						{item.series}
+						<span class="ml-1 text-ink/45">{item.count}</span>
+					</a>
+				))}
+			</div>
+		</section>
+	)}
+
 	{posts.length > 0 ? (
 		<section class="not-prose grid gap-5 md:grid-cols-2" aria-label="Published posts">
 			{posts.map((post) => <PostCard post={post} />)}
@@ -27,5 +59,29 @@ const posts = await listPublishedPosts(db, { limit: 20 });
 		<p class="not-prose rounded-lg border border-ink/10 bg-white/45 p-6 text-center text-ink/65 shadow-soft">
 			아직 글이 없습니다.
 		</p>
+	)}
+
+	{totalPages > 1 && (
+		<nav class="not-prose mt-10 flex items-center justify-center gap-2" aria-label="글 페이지">
+			{currentPage > 1 && (
+				<a class="rounded-full border border-ink/10 bg-white/60 px-3 py-1.5 text-sm font-bold text-ink/65 no-underline transition hover:bg-peach/35" href={pageHref(currentPage - 1)}>
+					이전
+				</a>
+			)}
+			{Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+				<a
+					class={`rounded-full px-3 py-1.5 text-sm font-bold no-underline transition ${page === currentPage ? 'bg-ink text-cream' : 'border border-ink/10 bg-white/60 text-ink/65 hover:bg-peach/35'}`}
+					href={pageHref(page)}
+					aria-current={page === currentPage ? 'page' : undefined}
+				>
+					{page}
+				</a>
+			))}
+			{currentPage < totalPages && (
+				<a class="rounded-full border border-ink/10 bg-white/60 px-3 py-1.5 text-sm font-bold text-ink/65 no-underline transition hover:bg-peach/35" href={pageHref(currentPage + 1)}>
+					다음
+				</a>
+			)}
+		</nav>
 	)}
 </RootLayout>

@@ -351,13 +351,7 @@ function toDatetimeLocal(value: string): string {
       });
 
       if (res.ok) {
-        if (mode === 'edit') {
-          location.href = `${location.pathname}?saved=1`;
-          return;
-        }
-
-        const data = await res.json();
-        location.href = `/admin/posts/${data.id}/edit`;
+        location.href = '/admin';
         return;
       }
 

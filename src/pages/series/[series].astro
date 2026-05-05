@@ -1,0 +1,68 @@
+---
+import PostCard from '@/components/PostCard.astro';
+import { getDb } from '@/db/client';
+import RootLayout from '@/layouts/RootLayout.astro';
+import { countPublishedPostsBySeries, listPublishedPostsBySeries } from '@/lib/posts';
+
+const db = getDb(Astro.locals.runtime.env);
+const series = decodeURIComponent(Astro.params.series ?? '');
+const pageSize = 10;
+const requestedPage = Number(Astro.url.searchParams.get('page') ?? 1);
+const totalPosts = await countPublishedPostsBySeries(db, series);
+const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+const currentPage = Number.isInteger(requestedPage) && requestedPage > 0
+  ? Math.min(requestedPage, totalPages)
+  : 1;
+const posts = await listPublishedPostsBySeries(db, series, {
+  limit: pageSize,
+  offset: (currentPage - 1) * pageSize,
+});
+
+function pageHref(page: number): string {
+  const path = `/series/${encodeURIComponent(series)}`;
+  return page === 1 ? path : `${path}?page=${page}`;
+}
+---
+
+<RootLayout title={`${series} 시리즈`} description={`${series} 시리즈 글 목록입니다.`}>
+  <section class="not-prose mb-10">
+    <p class="mb-3 text-sm font-semibold text-ink/55">Series</p>
+    <h1 class="font-display text-4xl font-bold leading-tight text-ink sm:text-5xl">
+      {series}
+    </h1>
+  </section>
+
+  {posts.length > 0 ? (
+    <section class="not-prose grid gap-5 md:grid-cols-2" aria-label={`${series} 시리즈 글 목록`}>
+      {posts.map((post) => <PostCard post={post} />)}
+    </section>
+  ) : (
+    <p class="not-prose rounded-lg border border-ink/10 bg-white/45 p-6 text-center text-ink/65 shadow-soft">
+      이 시리즈로 작성된 글이 없습니다.
+    </p>
+  )}
+
+  {totalPages > 1 && (
+    <nav class="not-prose mt-10 flex items-center justify-center gap-2" aria-label="시리즈 페이지">
+      {currentPage > 1 && (
+        <a class="rounded-full border border-ink/10 bg-white/60 px-3 py-1.5 text-sm font-bold text-ink/65 no-underline transition hover:bg-peach/35" href={pageHref(currentPage - 1)}>
+          이전
+        </a>
+      )}
+      {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+        <a
+          class={`rounded-full px-3 py-1.5 text-sm font-bold no-underline transition ${page === currentPage ? 'bg-ink text-cream' : 'border border-ink/10 bg-white/60 text-ink/65 hover:bg-peach/35'}`}
+          href={pageHref(page)}
+          aria-current={page === currentPage ? 'page' : undefined}
+        >
+          {page}
+        </a>
+      ))}
+      {currentPage < totalPages && (
+        <a class="rounded-full border border-ink/10 bg-white/60 px-3 py-1.5 text-sm font-bold text-ink/65 no-underline transition hover:bg-peach/35" href={pageHref(currentPage + 1)}>
+          다음
+        </a>
+      )}
+    </nav>
+  )}
+</RootLayout>
