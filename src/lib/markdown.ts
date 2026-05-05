@@ -39,8 +39,8 @@ export async function renderMarkdown(md: string): Promise<string> {
   const slugs = createSlugger();
   const supportedLangs = new Set<string>(langs);
 
-  const marked = new Marked({
-    gfm: true,
+  const marked = new Marked({ gfm: true });
+  marked.use({
     renderer: {
       code({ text, lang }: Tokens.Code) {
         const rawLang = normalizeLang(lang);
