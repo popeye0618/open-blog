@@ -1,5 +1,5 @@
-import DOMPurify from 'isomorphic-dompurify';
 import { Marked } from 'marked';
+import { DOMPurify } from './sanitize';
 
 const marked = new Marked({
   gfm: true,

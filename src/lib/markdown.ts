@@ -1,6 +1,6 @@
-import DOMPurify from 'isomorphic-dompurify';
 import { Marked, type Tokens } from 'marked';
 import { createHighlighter } from 'shiki';
+import { DOMPurify } from './sanitize';
 
 const theme = 'rose-pine-dawn';
 const langs = [
