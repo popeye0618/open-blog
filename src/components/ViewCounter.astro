@@ -1,0 +1,63 @@
+---
+interface Props {
+  slug: string;
+  initialCount: number;
+}
+
+const { slug, initialCount } = Astro.props;
+---
+
+<span class="inline-flex items-center gap-1 text-sm text-ink/60" data-view-counter data-slug={slug}>
+  <span aria-hidden="true">👀</span>
+  <span data-view-count>{initialCount.toLocaleString()}</span>
+  <span class="sr-only">조회수</span>
+</span>
+
+<script>
+  const root = document.querySelector('[data-view-counter]');
+
+  if (root instanceof HTMLElement) {
+    const slug = root.dataset.slug;
+    const key = `viewed:${slug}`;
+    const TTL_MS = 6 * 60 * 60 * 1000;
+
+    let shouldHit = true;
+
+    try {
+      const raw = sessionStorage.getItem(key);
+
+      if (raw) {
+        const ts = Number(raw);
+
+        if (Number.isFinite(ts) && Date.now() - ts < TTL_MS) {
+          shouldHit = false;
+        }
+      }
+    } catch {
+      // If sessionStorage is blocked, count the view once for this load.
+    }
+
+    if (shouldHit && slug) {
+      fetch(`/api/views/${encodeURIComponent(slug)}`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        keepalive: true,
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && typeof data.count === 'number') {
+            const target = root.querySelector('[data-view-count]');
+
+            if (target) {
+              target.textContent = data.count.toLocaleString();
+            }
+          }
+
+          try {
+            sessionStorage.setItem(key, String(Date.now()));
+          } catch {}
+        })
+        .catch(() => {});
+    }
+  }
+</script>

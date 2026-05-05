@@ -1,0 +1,24 @@
+---
+import { getDb } from '@/db/client';
+import RootLayout from '@/layouts/RootLayout.astro';
+import { renderMarkdown } from '@/lib/markdown';
+import { getSetting, getSettings } from '@/lib/settings';
+
+const db = getDb(Astro.locals.runtime.env);
+const settings = await getSettings(db, Astro.locals);
+const aboutMd = getSetting(settings, 'about_md');
+const siteDescription = getSetting(settings, 'site_description', '기술과 생각을 기록하는 곳');
+const html = aboutMd ? await renderMarkdown(aboutMd) : '';
+---
+
+<RootLayout title="소개" description={siteDescription}>
+  <article class="prose prose-pastel max-w-none">
+    {html ? (
+      <div set:html={html} />
+    ) : (
+      <p class="not-prose rounded-lg border border-ink/10 bg-white/45 p-6 text-center text-ink/65 shadow-soft">
+        소개 글이 아직 등록되지 않았습니다.
+      </p>
+    )}
+  </article>
+</RootLayout>

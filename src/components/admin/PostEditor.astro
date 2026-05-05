@@ -1,0 +1,330 @@
+---
+interface PostEditorInitial {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  bodyMd: string;
+  tags: string;
+  series: string | null;
+  lang: string;
+  coverImage: string | null;
+  pinned: number;
+  publishedAt: string | null;
+}
+
+interface Props {
+  mode: 'create' | 'edit';
+  initial?: PostEditorInitial;
+}
+
+const { mode, initial } = Astro.props;
+const saved = Astro.url.searchParams.get('saved') === '1';
+const tagsValue = parseTags(initial?.tags ?? '[]').join(', ');
+const publishedValue = initial?.publishedAt ? toDatetimeLocal(initial.publishedAt) : '';
+
+function parseTags(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((tag) => typeof tag === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function toDatetimeLocal(value: string): string {
+  const date = new Date(`${value.replace(' ', 'T')}Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.replace(' ', 'T').slice(0, 16);
+  }
+
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+---
+
+<section class="space-y-5">
+  {saved && (
+    <p class="rounded-lg border border-mint/70 bg-mint/25 px-4 py-3 text-sm font-semibold text-ink">
+      저장했습니다.
+    </p>
+  )}
+
+  <form class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]" data-editor-form data-mode={mode} data-post-id={initial?.id ?? ''}>
+    <div class="space-y-4 rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft">
+      <label class="block text-sm font-semibold text-ink/70">
+        제목
+        <input
+          class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          type="text"
+          name="title"
+          value={initial?.title ?? ''}
+          maxlength="200"
+          required
+          data-title-input
+        />
+      </label>
+
+      <label class="block text-sm font-semibold text-ink/70">
+        슬러그
+        <input
+          class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          type="text"
+          name="slug"
+          value={initial?.slug ?? ''}
+          pattern="[a-z0-9-]+"
+          maxlength="120"
+          required
+          data-slug-input
+        />
+      </label>
+
+      <label class="block text-sm font-semibold text-ink/70">
+        설명
+        <textarea
+          class="mt-2 min-h-20 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          name="description"
+          maxlength="300"
+          rows="2"
+        >{initial?.description ?? ''}</textarea>
+      </label>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm font-semibold text-ink/70">
+          태그
+          <input
+            class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+            type="text"
+            name="tags"
+            value={tagsValue}
+            placeholder="blog, astro"
+          />
+        </label>
+
+        <label class="block text-sm font-semibold text-ink/70">
+          시리즈
+          <input
+            class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+            type="text"
+            name="series"
+            value={initial?.series ?? ''}
+          />
+        </label>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm font-semibold text-ink/70">
+          언어
+          <select class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50" name="lang">
+            <option value="ko" selected={(initial?.lang ?? 'ko') === 'ko'}>ko</option>
+            <option value="en" selected={initial?.lang === 'en'}>en</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-semibold text-ink/70">
+          게시 시각
+          <input
+            class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+            type="datetime-local"
+            name="publishedAt"
+            value={publishedValue}
+          />
+        </label>
+      </div>
+
+      <label class="block text-sm font-semibold text-ink/70">
+        커버 이미지
+        <input
+          class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          type="url"
+          name="coverImage"
+          value={initial?.coverImage ?? ''}
+        />
+      </label>
+
+      <label class="flex items-center gap-2 text-sm font-semibold text-ink/70">
+        <input class="h-4 w-4 rounded border-ink/20 text-ink focus:ring-peach" type="checkbox" name="pinned" checked={Boolean(initial?.pinned)} />
+        상단 고정
+      </label>
+
+      <label class="block text-sm font-semibold text-ink/70">
+        본문
+        <textarea
+          class="mt-2 min-h-[24rem] w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+          name="bodyMd"
+          required
+          data-body-input
+        >{initial?.bodyMd ?? ''}</textarea>
+      </label>
+
+      <p class="hidden rounded-lg border border-pink/60 bg-pink/20 px-3 py-2 text-sm font-semibold text-ink" data-error-message></p>
+
+      <div class="flex flex-wrap gap-3">
+        <button class="rounded-full border border-ink/10 bg-white/70 px-4 py-2 text-sm font-bold text-ink/70 transition hover:bg-butter/40" type="submit" data-submit-action="draft">
+          초안 저장
+        </button>
+        <button class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-cream transition hover:bg-ink/85" type="submit" data-submit-action="publish">
+          지금 발행
+        </button>
+        <button class="rounded-full bg-peach/80 px-4 py-2 text-sm font-bold text-ink transition hover:bg-peach" type="submit" data-submit-action="save">
+          예약/저장
+        </button>
+      </div>
+    </div>
+
+    <aside class="rounded-lg border border-ink/10 bg-white/45 p-5 shadow-soft">
+      <div class="mb-3 text-sm font-bold text-ink/60">라이브 프리뷰</div>
+      <div id="preview" class="prose prose-pastel max-w-none"></div>
+    </aside>
+  </form>
+</section>
+
+<script>
+  import { marked } from 'marked';
+
+  const form = document.querySelector('[data-editor-form]');
+  const titleInput = document.querySelector('[data-title-input]');
+  const slugInput = document.querySelector('[data-slug-input]');
+  const bodyInput = document.querySelector('[data-body-input]');
+  const preview = document.getElementById('preview');
+  const errorMessage = document.querySelector('[data-error-message]');
+  let slugTouched = Boolean(slugInput instanceof HTMLInputElement && slugInput.value);
+  let previewTimer = 0;
+
+  if (slugInput instanceof HTMLInputElement) {
+    slugInput.addEventListener('input', () => {
+      slugTouched = true;
+      slugInput.value = slugify(slugInput.value);
+    });
+  }
+
+  if (titleInput instanceof HTMLInputElement && slugInput instanceof HTMLInputElement) {
+    titleInput.addEventListener('input', () => {
+      if (!slugTouched) {
+        slugInput.value = slugify(titleInput.value);
+      }
+    });
+  }
+
+  if (bodyInput instanceof HTMLTextAreaElement && preview) {
+    const renderPreview = () => {
+      // Admin-only preview. Public post rendering still goes through the server sanitizer.
+      preview.innerHTML = marked.parse(bodyInput.value);
+    };
+
+    renderPreview();
+    bodyInput.addEventListener('input', () => {
+      window.clearTimeout(previewTimer);
+      previewTimer = window.setTimeout(renderPreview, 250);
+    });
+  }
+
+  if (form instanceof HTMLFormElement) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      hideError();
+
+      const submitter = event.submitter instanceof HTMLButtonElement ? event.submitter : null;
+      const action = submitter?.dataset.submitAction ?? 'save';
+      const formData = new FormData(form);
+      const title = String(formData.get('title') ?? '').trim();
+      const slug = String(formData.get('slug') ?? '').trim() || slugify(title);
+      const bodyMd = String(formData.get('bodyMd') ?? '').trim();
+
+      if (!title || !slug || !bodyMd || !/^[a-z0-9-]+$/.test(slug)) {
+        showError('제목, 슬러그, 본문을 확인해 주세요.');
+        return;
+      }
+
+      const publishedAt = getPublishedAt(action, String(formData.get('publishedAt') ?? ''));
+      const payload = {
+        title,
+        slug,
+        description: cleanOptional(formData.get('description')),
+        tags: parseTags(String(formData.get('tags') ?? '')),
+        series: cleanOptional(formData.get('series')),
+        lang: String(formData.get('lang') ?? 'ko'),
+        coverImage: cleanOptional(formData.get('coverImage')),
+        pinned: formData.get('pinned') === 'on',
+        publishedAt,
+        bodyMd,
+      };
+      const mode = form.dataset.mode;
+      const postId = form.dataset.postId;
+      const endpoint = mode === 'edit' && postId ? `/api/admin/posts/${encodeURIComponent(postId)}` : '/api/admin/posts';
+      const method = mode === 'edit' ? 'PATCH' : 'POST';
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        if (mode === 'edit') {
+          location.href = `${location.pathname}?saved=1`;
+          return;
+        }
+
+        const data = await res.json();
+        location.href = `/admin/posts/${data.id}/edit`;
+        return;
+      }
+
+      if (res.status === 409) {
+        showError('이미 사용 중인 슬러그입니다.');
+        return;
+      }
+
+      showError('저장하지 못했습니다.');
+    });
+  }
+
+  function slugify(value) {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 120);
+  }
+
+  function cleanOptional(value) {
+    const text = String(value ?? '').trim();
+    return text ? text : null;
+  }
+
+  function parseTags(value) {
+    return Array.from(
+      new Set(
+        value
+          .split(/[,\s]+/)
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    );
+  }
+
+  function getPublishedAt(action, localValue) {
+    if (action === 'draft') {
+      return null;
+    }
+
+    if (action === 'publish') {
+      return new Date().toISOString();
+    }
+
+    return localValue ? new Date(localValue).toISOString() : null;
+  }
+
+  function showError(message) {
+    if (!(errorMessage instanceof HTMLElement)) return;
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+  }
+
+  function hideError() {
+    if (!(errorMessage instanceof HTMLElement)) return;
+    errorMessage.textContent = '';
+    errorMessage.classList.add('hidden');
+  }
+</script>

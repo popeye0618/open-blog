@@ -1,0 +1,47 @@
+---
+interface Props {
+  siteTitle: string;
+  siteDescription?: string;
+}
+
+const { siteTitle, siteDescription = '' } = Astro.props;
+---
+
+<header class="border-b border-ink/10 bg-cream/95">
+  <div class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-end sm:justify-between">
+    <div class="relative">
+      <svg
+        class="absolute -left-4 -top-3 h-12 w-12 rotate-[-8deg] text-mint/70"
+        viewBox="0 0 64 64"
+        aria-hidden="true"
+      >
+        <path
+          fill="currentColor"
+          d="M49.8 12.7c7.4 6.1 8.8 20.1 2.6 29.2-6.2 9-20.1 13.1-31.3 8.4C9.9 45.6 1.4 32.1 5.6 22.1 9.9 12 26.8 5.5 38.5 7.3c4.5.7 8.2 2.4 11.3 5.4Z"
+        />
+      </svg>
+      <a class="relative font-display text-3xl font-bold text-ink no-underline decoration-peach decoration-4 underline-offset-4 hover:underline" href="/">
+        {siteTitle}
+      </a>
+      {siteDescription && <p class="mt-1 text-sm text-ink/65">{siteDescription}</p>}
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <nav class="flex flex-wrap gap-3 text-sm font-semibold text-ink/70" aria-label="Primary navigation">
+        <a class="transition hover:text-ink" href="/">홈</a>
+        <a class="transition hover:text-ink" href="/about">소개</a>
+      </nav>
+
+      <form action="/search" method="get" role="search">
+        <input
+          class="w-32 rounded-full border border-ink/10 bg-white/55 px-3 py-1.5 text-sm text-ink placeholder:text-ink/45 outline-none transition focus:border-peach focus:ring-2 focus:ring-peach/50 sm:w-44"
+          type="search"
+          name="q"
+          placeholder="검색"
+          aria-label="검색"
+        />
+        <button class="sr-only" type="submit">검색</button>
+      </form>
+    </div>
+  </div>
+</header>

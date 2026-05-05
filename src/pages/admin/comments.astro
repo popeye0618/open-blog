@@ -1,0 +1,160 @@
+---
+import AdminLayout from '@/components/admin/AdminLayout.astro';
+import { getDb } from '@/db/client';
+import { listAllComments, type CommentStatus } from '@/lib/comments';
+
+const db = getDb(Astro.locals.runtime.env);
+const rawStatus = Astro.url.searchParams.get('status') ?? 'all';
+const status = ['all', 'visible', 'hidden', 'spam'].includes(rawStatus) ? rawStatus : 'all';
+const rawLimit = Number(Astro.url.searchParams.get('limit') ?? 100);
+const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 100;
+const comments = await listAllComments(db, {
+  status: status === 'all' ? undefined : status as CommentStatus,
+  limit,
+});
+const statusOptions: Array<'visible' | 'hidden' | 'spam'> = ['visible', 'hidden', 'spam'];
+
+function excerpt(value: string): string {
+  const text = value.replace(/\s+/g, ' ').trim();
+  return text.length > 80 ? `${text.slice(0, 80)}...` : text;
+}
+
+function formatDate(value: string): string {
+  return value.slice(0, 16);
+}
+
+function statusClass(value: string): string {
+  return {
+    visible: 'bg-mint/70 text-ink/70',
+    hidden: 'bg-ink/10 text-ink/45',
+    spam: 'bg-pink/70 text-ink/70',
+  }[value] ?? 'bg-butter/70 text-ink/70';
+}
+---
+
+<AdminLayout title="댓글">
+  <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-ink/55">관리자</p>
+      <h1 class="font-display text-4xl font-bold">댓글</h1>
+    </div>
+  </header>
+
+  <form class="mb-5 flex flex-wrap gap-3 rounded-lg border border-ink/10 bg-white/45 p-4 shadow-soft" method="get">
+    <select class="rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50" name="status">
+      <option value="all" selected={status === 'all'}>전체</option>
+      <option value="visible" selected={status === 'visible'}>visible</option>
+      <option value="hidden" selected={status === 'hidden'}>hidden</option>
+      <option value="spam" selected={status === 'spam'}>spam</option>
+    </select>
+    <input
+      class="w-28 rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+      type="number"
+      min="1"
+      max="500"
+      name="limit"
+      value={limit}
+      aria-label="limit"
+    />
+    <button class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-cream transition hover:bg-ink/85" type="submit">필터</button>
+  </form>
+
+  <section class="overflow-hidden rounded-lg border border-ink/10 bg-white/50 shadow-soft">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[980px] text-left text-sm">
+        <thead class="bg-butter/35 text-xs uppercase tracking-wide text-ink/55">
+          <tr>
+            <th class="px-4 py-3">작성일</th>
+            <th class="px-4 py-3">글</th>
+            <th class="px-4 py-3">작성자</th>
+            <th class="px-4 py-3">본문</th>
+            <th class="px-4 py-3">IP</th>
+            <th class="px-4 py-3">상태</th>
+            <th class="px-4 py-3">액션</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/10">
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <tr>
+                <td class="whitespace-nowrap px-4 py-3 text-ink/65">{formatDate(comment.created_at)}</td>
+                <td class="px-4 py-3">
+                  {comment.post_slug ? (
+                    <a class="font-semibold text-ink underline decoration-peach decoration-2 underline-offset-4" href={`/posts/${comment.post_slug}`}>
+                      {comment.post_title ?? `(post ${comment.post_id})`}
+                    </a>
+                  ) : (
+                    <span class="text-ink/45">(deleted)</span>
+                  )}
+                </td>
+                <td class="px-4 py-3 font-semibold">{comment.author_name}</td>
+                <td class="max-w-xs px-4 py-3 text-ink/65">{excerpt(comment.body_md)}</td>
+                <td class="px-4 py-3 font-mono text-xs text-ink/45">{comment.ip_hash.slice(0, 8)}</td>
+                <td class="px-4 py-3">
+                  <span class={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass(comment.status)}`}>{comment.status}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex flex-wrap gap-2">
+                    {statusOptions.map((option) => (
+                      <button
+                        class="rounded-full border border-ink/10 bg-white/65 px-2.5 py-1 text-xs font-bold text-ink/65 transition hover:bg-peach/35 disabled:cursor-not-allowed disabled:opacity-45"
+                        type="button"
+                        data-action="status"
+                        data-id={comment.id}
+                        data-status={option}
+                        disabled={comment.status === option}
+                      >
+                        {option[0].toUpperCase() + option.slice(1)}
+                      </button>
+                    ))}
+                    <button
+                      class="rounded-full border border-pink/60 bg-pink/25 px-2.5 py-1 text-xs font-bold text-ink/65 transition hover:bg-pink/45"
+                      type="button"
+                      data-action="delete"
+                      data-id={comment.id}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td class="px-4 py-8 text-center text-ink/60" colspan="7">댓글이 없습니다.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    for (const button of document.querySelectorAll('[data-action]')) {
+      button.addEventListener('click', async () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const id = button.dataset.id;
+        const action = button.dataset.action;
+        if (!id || !action) return;
+
+        const url = `/api/admin/comments/${encodeURIComponent(id)}`;
+        const init = action === 'delete'
+          ? { method: 'DELETE' }
+          : {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: button.dataset.status }),
+            };
+
+        if (action === 'delete' && !confirm('이 댓글을 삭제할까요?')) return;
+
+        const res = await fetch(url, init);
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert('처리하지 못했습니다.');
+        }
+      });
+    }
+  </script>
+</AdminLayout>

@@ -1,0 +1,92 @@
+---
+import AdminLayout from '@/components/admin/AdminLayout.astro';
+import { getDb } from '@/db/client';
+import { getSettings } from '@/lib/settings';
+
+const db = getDb(Astro.locals.runtime.env);
+const settings = await getSettings(db, Astro.locals);
+const saved = Astro.url.searchParams.get('saved') === '1';
+---
+
+<AdminLayout title="설정">
+  <header class="mb-6">
+    <p class="text-sm font-semibold text-ink/55">관리자</p>
+    <h1 class="font-display text-4xl font-bold">설정</h1>
+  </header>
+
+  {saved && (
+    <p class="mb-4 rounded-lg border border-mint/70 bg-mint/25 px-4 py-3 text-sm font-semibold text-ink/70">
+      저장했습니다.
+    </p>
+  )}
+
+  <form id="settings-form" class="space-y-5 rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft">
+    <label class="block">
+      <span class="text-sm font-bold text-ink/70">site_title</span>
+      <input
+        class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+        name="site_title"
+        value={settings.site_title ?? ''}
+      />
+    </label>
+
+    <label class="block">
+      <span class="text-sm font-bold text-ink/70">site_description</span>
+      <textarea
+        class="mt-2 min-h-20 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+        name="site_description"
+      >{settings.site_description ?? ''}</textarea>
+    </label>
+
+    <label class="block">
+      <span class="text-sm font-bold text-ink/70">about_md</span>
+      <textarea
+        class="mt-2 min-h-64 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+        name="about_md"
+      >{settings.about_md ?? ''}</textarea>
+    </label>
+
+    <label class="block">
+      <span class="text-sm font-bold text-ink/70">footer_md</span>
+      <textarea
+        class="mt-2 min-h-32 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 font-mono text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+        name="footer_md"
+      >{settings.footer_md ?? ''}</textarea>
+    </label>
+
+    <label class="block">
+      <span class="text-sm font-bold text-ink/70">owner_name</span>
+      <input
+        class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+        name="owner_name"
+        value={settings.owner_name ?? ''}
+      />
+    </label>
+
+    <button class="rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-cream transition hover:bg-ink/85" type="submit">
+      저장
+    </button>
+  </form>
+
+  <script>
+    const form = document.querySelector('#settings-form');
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!(form instanceof HTMLFormElement)) return;
+
+      const payload = Object.fromEntries(new FormData(form).entries());
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        location.href = '/admin/settings?saved=1';
+      } else {
+        alert('저장하지 못했습니다.');
+      }
+    });
+  </script>
+</AdminLayout>

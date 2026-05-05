@@ -1,0 +1,93 @@
+---
+import AdminLayout from '@/components/admin/AdminLayout.astro';
+import { getDb } from '@/db/client';
+import { listAllViewsWithPosts } from '@/lib/views';
+
+const db = getDb(Astro.locals.runtime.env);
+const rows = await listAllViewsWithPosts(db);
+---
+
+<AdminLayout title="조회수">
+  <header class="mb-6">
+    <p class="text-sm font-semibold text-ink/55">관리자</p>
+    <h1 class="font-display text-4xl font-bold">조회수</h1>
+  </header>
+
+  <section class="overflow-hidden rounded-lg border border-ink/10 bg-white/50 shadow-soft">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[720px] text-left text-sm">
+        <thead class="bg-butter/35 text-xs uppercase tracking-wide text-ink/55">
+          <tr>
+            <th class="px-4 py-3">slug</th>
+            <th class="px-4 py-3">title</th>
+            <th class="px-4 py-3">count</th>
+            <th class="px-4 py-3">updated</th>
+            <th class="px-4 py-3">action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/10">
+          {rows.length > 0 ? (
+            rows.map((row) => (
+              <tr>
+                <td class="px-4 py-3 font-mono text-xs text-ink/65">{row.slug}</td>
+                <td class="px-4 py-3">
+                  {row.title ? (
+                    <span class="font-semibold">{row.title}</span>
+                  ) : (
+                    <span class="text-ink/45">(deleted)</span>
+                  )}
+                </td>
+                <td class="px-4 py-3">
+                  <input
+                    class="w-28 rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+                    type="number"
+                    min="0"
+                    step="1"
+                    data-slug={row.slug}
+                    value={row.count}
+                  />
+                </td>
+                <td class="px-4 py-3 text-ink/60">{row.updated_at}</td>
+                <td class="px-4 py-3">
+                  <button class="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-ink/85" type="button" data-save-view={row.slug}>
+                    Save
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td class="px-4 py-8 text-center text-ink/60" colspan="5">조회수 데이터가 없습니다.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    for (const button of document.querySelectorAll('[data-save-view]')) {
+      button.addEventListener('click', async () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const slug = button.dataset.saveView;
+        if (!slug) return;
+
+        const input = document.querySelector(`[data-slug="${CSS.escape(slug)}"]`);
+        if (!(input instanceof HTMLInputElement)) return;
+
+        const count = Number(input.value);
+        const res = await fetch(`/api/admin/views/${encodeURIComponent(slug)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ count }),
+        });
+
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert('저장하지 못했습니다.');
+        }
+      });
+    }
+  </script>
+</AdminLayout>

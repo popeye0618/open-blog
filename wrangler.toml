@@ -1,0 +1,15 @@
+name = "blog" # Pages 프로젝트 이름과 일치시키지 않아도 무방
+compatibility_date = "2025-05-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+# Cloudflare Pages 배포 시:
+# 1. `wrangler d1 create blog` 실행
+# 2. 출력된 database_id를 아래 database_id와 preview_database_id에 채워넣는다.
+# 3. Pages 대시보드 Settings → Functions → D1 database bindings에서 `DB`를 같은 DB에 연결.
+[[d1_databases]]
+binding = "DB"
+database_name = "blog"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+preview_database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "./drizzle"

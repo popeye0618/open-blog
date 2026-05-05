@@ -1,0 +1,166 @@
+---
+import type { SQL } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
+
+import AdminLayout from '@/components/admin/AdminLayout.astro';
+import { getDb, schema } from '@/db/client';
+
+const db = getDb(Astro.locals.runtime.env);
+const { comments, posts } = schema;
+
+const [
+  published,
+  scheduled,
+  draft,
+  visibleComments,
+  hiddenComments,
+  spamComments,
+  recentPosts,
+  recentComments,
+] = await Promise.all([
+  countPosts(sql`published_at IS NOT NULL AND published_at <= datetime('now')`),
+  countPosts(sql`published_at > datetime('now')`),
+  countPosts(sql`published_at IS NULL`),
+  countComments('visible'),
+  countComments('hidden'),
+  countComments('spam'),
+  db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      publishedAt: posts.publishedAt,
+      updatedAt: posts.updatedAt,
+    })
+    .from(posts)
+    .orderBy(desc(posts.updatedAt))
+    .limit(5)
+    .all(),
+  db
+    .select({
+      id: comments.id,
+      authorName: comments.authorName,
+      bodyMd: comments.bodyMd,
+      createdAt: comments.createdAt,
+      postTitle: posts.title,
+      postSlug: posts.slug,
+    })
+    .from(comments)
+    .leftJoin(posts, eq(comments.postId, posts.id))
+    .orderBy(desc(comments.createdAt))
+    .limit(5)
+    .all(),
+]);
+
+function getStatus(post: { publishedAt: string | null }): 'published' | 'scheduled' | 'draft' {
+  if (!post.publishedAt) {
+    return 'draft';
+  }
+
+  return post.publishedAt > nowSqlite() ? 'scheduled' : 'published';
+}
+
+function statusLabel(status: 'published' | 'scheduled' | 'draft'): string {
+  return { published: '발행됨', scheduled: '예약됨', draft: '초안' }[status];
+}
+
+function excerpt(value: string, length: number): string {
+  const text = value.replace(/\s+/g, ' ').trim();
+  return text.length > length ? `${text.slice(0, length)}...` : text;
+}
+
+function nowSqlite(): string {
+  return new Date().toISOString().slice(0, 19).replace('T', ' ');
+}
+
+async function countPosts(where: SQL): Promise<number> {
+  const row = await db.get<{ count: number }>(sql`SELECT COUNT(*) AS count FROM posts WHERE ${where}`);
+  return row?.count ?? 0;
+}
+
+async function countComments(status: 'visible' | 'hidden' | 'spam'): Promise<number> {
+  const row = await db.get<{ count: number }>(
+    sql`SELECT COUNT(*) AS count FROM comments WHERE status = ${status}`,
+  );
+  return row?.count ?? 0;
+}
+---
+
+<AdminLayout title="대시보드">
+  <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-ink/55">관리자</p>
+      <h1 class="font-display text-4xl font-bold">대시보드</h1>
+    </div>
+    <a class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-cream no-underline transition hover:bg-ink/85" href="/admin/posts/new">
+      + 새 글
+    </a>
+  </header>
+
+  <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">발행됨</p>
+      <p class="mt-2 font-display text-4xl font-bold">{published}</p>
+    </article>
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">예약됨</p>
+      <p class="mt-2 font-display text-4xl font-bold">{scheduled}</p>
+    </article>
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">초안</p>
+      <p class="mt-2 font-display text-4xl font-bold">{draft}</p>
+    </article>
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">댓글 visible</p>
+      <p class="mt-2 font-display text-4xl font-bold">{visibleComments}</p>
+    </article>
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">댓글 hidden</p>
+      <p class="mt-2 font-display text-4xl font-bold">{hiddenComments}</p>
+    </article>
+    <article class="rounded-lg border border-ink/10 bg-white/55 p-5 shadow-soft">
+      <p class="text-sm font-semibold text-ink/55">댓글 spam</p>
+      <p class="mt-2 font-display text-4xl font-bold">{spamComments}</p>
+    </article>
+  </section>
+
+  <section class="mt-8 grid gap-6 lg:grid-cols-2">
+    <article class="rounded-lg border border-ink/10 bg-white/45 p-5 shadow-soft">
+      <h2 class="font-display text-2xl font-bold">최근 수정한 글</h2>
+      <div class="mt-4 divide-y divide-ink/10">
+        {recentPosts.length > 0 ? (
+          recentPosts.map((post) => {
+            const status = getStatus(post);
+            return (
+              <a class="flex items-center justify-between gap-4 py-3 text-ink no-underline transition hover:text-ink/70" href={`/admin/posts/${post.id}/edit`}>
+                <span class="font-semibold">{post.title}</span>
+                <span class="rounded-full bg-butter/70 px-2.5 py-1 text-xs font-bold text-ink/65">{statusLabel(status)}</span>
+              </a>
+            );
+          })
+        ) : (
+          <p class="py-4 text-sm text-ink/60">아직 글이 없습니다.</p>
+        )}
+      </div>
+    </article>
+
+    <article class="rounded-lg border border-ink/10 bg-white/45 p-5 shadow-soft">
+      <h2 class="font-display text-2xl font-bold">최근 댓글</h2>
+      <div class="mt-4 divide-y divide-ink/10">
+        {recentComments.length > 0 ? (
+          recentComments.map((comment) => (
+            <a
+              class="block py-3 text-ink no-underline transition hover:text-ink/70"
+              href={comment.postSlug ? `/posts/${comment.postSlug}#comments` : '/admin/comments'}
+            >
+              <span class="block text-sm font-semibold">{comment.authorName}</span>
+              <span class="mt-1 block text-sm text-ink/65">{excerpt(comment.bodyMd, 30)}</span>
+              <span class="mt-1 block text-xs text-ink/45">{comment.postTitle ?? '(deleted)'} · {comment.createdAt}</span>
+            </a>
+          ))
+        ) : (
+          <p class="py-4 text-sm text-ink/60">아직 댓글이 없습니다.</p>
+        )}
+      </div>
+    </article>
+  </section>
+</AdminLayout>

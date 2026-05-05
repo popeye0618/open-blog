@@ -1,0 +1,37 @@
+---
+import { renderMarkdown } from '@/lib/markdown';
+
+interface Props {
+  footerMd: string;
+  fallbackText: string;
+}
+
+const { footerMd, fallbackText } = Astro.props;
+const footerHtml = footerMd ? addFooterLinkAttrs(await renderMarkdown(footerMd)) : '';
+
+function addFooterLinkAttrs(html: string): string {
+  return html.replace(/<a\b([^>]*)>/g, (_match, attrs: string) => {
+    let nextAttrs = attrs;
+
+    if (!/\brel=/.test(nextAttrs)) {
+      nextAttrs += ' rel="nofollow noopener"';
+    }
+
+    if (!/\btarget=/.test(nextAttrs)) {
+      nextAttrs += ' target="_blank"';
+    }
+
+    return `<a${nextAttrs}>`;
+  });
+}
+---
+
+<footer class="mt-16 border-t border-transparent bg-gradient-to-r from-peach/70 via-mint/70 to-lavender/70 pt-px">
+  <div class="bg-cream px-4 py-8 text-center text-sm text-ink/60">
+    {footerHtml ? (
+      <div class="prose prose-pastel mx-auto max-w-3xl" set:html={footerHtml} />
+    ) : (
+      <p>{fallbackText}</p>
+    )}
+  </div>
+</footer>

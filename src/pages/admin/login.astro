@@ -1,0 +1,45 @@
+---
+import '../../styles/global.css';
+
+if (Astro.locals.runtime.env.AUTH_MODE !== 'password') {
+  return Astro.redirect('/');
+}
+
+const hasError = Astro.url.searchParams.get('error') === '1';
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 로그인</title>
+  </head>
+  <body>
+    <main class="flex min-h-screen items-center justify-center bg-cream px-4 py-12 text-ink">
+      <section class="w-full max-w-sm rounded-lg border border-ink/10 bg-white/55 p-6 shadow-soft">
+        <h1 class="font-display text-3xl font-bold">관리자 로그인</h1>
+        {hasError && (
+          <p class="mt-4 rounded-lg border border-pink/60 bg-pink/20 px-3 py-2 text-sm font-semibold text-ink">
+            비밀번호를 확인해 주세요.
+          </p>
+        )}
+        <form class="mt-6 space-y-4" method="post" action="/api/auth/login">
+          <label class="block text-sm font-semibold text-ink/70">
+            비밀번호
+            <input
+              class="mt-2 w-full rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-ink outline-none transition focus:border-peach focus:ring-2 focus:ring-peach/50"
+              type="password"
+              name="password"
+              required
+              autocomplete="current-password"
+            />
+          </label>
+          <button class="w-full rounded-full bg-ink px-4 py-2.5 text-sm font-bold text-cream transition hover:bg-ink/85" type="submit">
+            로그인
+          </button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

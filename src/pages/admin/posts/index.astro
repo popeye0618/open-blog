@@ -1,0 +1,149 @@
+---
+import type { SQL } from 'drizzle-orm';
+import { and, desc, isNotNull, isNull, like, lte, or, sql } from 'drizzle-orm';
+
+import AdminLayout from '@/components/admin/AdminLayout.astro';
+import { getDb, schema } from '@/db/client';
+
+const db = getDb(Astro.locals.runtime.env);
+const { posts } = schema;
+const rawStatus = Astro.url.searchParams.get('status') ?? 'all';
+const status = ['all', 'published', 'scheduled', 'draft'].includes(rawStatus) ? rawStatus : 'all';
+const q = Astro.url.searchParams.get('q')?.trim() ?? '';
+const filters: SQL[] = [];
+
+if (status === 'published') {
+  filters.push(and(isNotNull(posts.publishedAt), lte(posts.publishedAt, sql`datetime('now')`))!);
+} else if (status === 'scheduled') {
+  filters.push(sql`${posts.publishedAt} > datetime('now')`);
+} else if (status === 'draft') {
+  filters.push(isNull(posts.publishedAt));
+}
+
+if (q) {
+  const pattern = `%${q}%`;
+  filters.push(or(like(posts.title, pattern), like(posts.slug, pattern))!);
+}
+
+const rows = await db
+  .select({
+    id: posts.id,
+    title: posts.title,
+    slug: posts.slug,
+    lang: posts.lang,
+    publishedAt: posts.publishedAt,
+    updatedAt: posts.updatedAt,
+  })
+  .from(posts)
+  .where(filters.length > 0 ? and(...filters) : undefined)
+  .orderBy(desc(posts.updatedAt))
+  .limit(100)
+  .all();
+
+function getStatus(post: { publishedAt: string | null }): 'published' | 'scheduled' | 'draft' {
+  if (!post.publishedAt) {
+    return 'draft';
+  }
+
+  return post.publishedAt > new Date().toISOString().slice(0, 19).replace('T', ' ')
+    ? 'scheduled'
+    : 'published';
+}
+
+function statusLabel(value: 'published' | 'scheduled' | 'draft'): string {
+  return { published: '발행됨', scheduled: '예약됨', draft: '초안' }[value];
+}
+---
+
+<AdminLayout title="글">
+  <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-ink/55">관리자</p>
+      <h1 class="font-display text-4xl font-bold">글</h1>
+    </div>
+    <a class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-cream no-underline transition hover:bg-ink/85" href="/admin/posts/new">
+      + 새 글
+    </a>
+  </header>
+
+  <form class="mb-5 flex flex-wrap gap-3 rounded-lg border border-ink/10 bg-white/45 p-4 shadow-soft" method="get">
+    <select class="rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50" name="status">
+      <option value="all" selected={status === 'all'}>전체</option>
+      <option value="published" selected={status === 'published'}>발행됨</option>
+      <option value="scheduled" selected={status === 'scheduled'}>예약됨</option>
+      <option value="draft" selected={status === 'draft'}>초안</option>
+    </select>
+    <input
+      class="min-w-0 flex-1 rounded-lg border border-ink/10 bg-white/70 px-3 py-2 text-sm outline-none focus:border-peach focus:ring-2 focus:ring-peach/50"
+      type="search"
+      name="q"
+      value={q}
+      placeholder="제목 또는 슬러그"
+    />
+    <button class="rounded-full bg-ink px-4 py-2 text-sm font-bold text-cream transition hover:bg-ink/85" type="submit">필터</button>
+  </form>
+
+  <section class="overflow-hidden rounded-lg border border-ink/10 bg-white/50 shadow-soft">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[760px] text-left text-sm">
+        <thead class="bg-butter/35 text-xs uppercase tracking-wide text-ink/55">
+          <tr>
+            <th class="px-4 py-3">Title</th>
+            <th class="px-4 py-3">Slug</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Lang</th>
+            <th class="px-4 py-3">Published</th>
+            <th class="px-4 py-3">Updated</th>
+            <th class="px-4 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/10">
+          {rows.length > 0 ? (
+            rows.map((post) => {
+              const rowStatus = getStatus(post);
+              return (
+                <tr>
+                  <td class="px-4 py-3 font-semibold">{post.title}</td>
+                  <td class="px-4 py-3 font-mono text-xs text-ink/65">{post.slug}</td>
+                  <td class="px-4 py-3">
+                    <span class="rounded-full bg-butter/70 px-2.5 py-1 text-xs font-bold text-ink/65">{statusLabel(rowStatus)}</span>
+                  </td>
+                  <td class="px-4 py-3">{post.lang}</td>
+                  <td class="px-4 py-3 text-ink/65">{post.publishedAt ?? '—'}</td>
+                  <td class="px-4 py-3 text-ink/65">{post.updatedAt}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                      <a class="font-bold text-ink underline decoration-peach decoration-2 underline-offset-4" href={`/admin/posts/${post.id}/edit`}>Edit</a>
+                      <button class="font-bold text-ink/65 underline decoration-pink decoration-2 underline-offset-4" type="button" data-delete-id={post.id}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td class="px-4 py-8 text-center text-ink/60" colspan="7">글이 없습니다.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    for (const button of document.querySelectorAll('[data-delete-id]')) {
+      button.addEventListener('click', async () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const id = button.dataset.deleteId;
+        if (!id || !confirm('이 글을 삭제할까요?')) return;
+
+        const res = await fetch(`/api/admin/posts/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert('삭제하지 못했습니다.');
+        }
+      });
+    }
+  </script>
+</AdminLayout>

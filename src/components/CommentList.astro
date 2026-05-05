@@ -1,0 +1,72 @@
+---
+import { renderCommentMarkdown } from '@/lib/comment-markdown';
+import type { VisibleComment } from '@/lib/comments';
+
+interface Props {
+  comments: VisibleComment[];
+}
+
+const renderedComments = await Promise.all(
+  Astro.props.comments.map(async (comment) => ({
+    ...comment,
+    html: await renderCommentMarkdown(comment.body_md),
+  })),
+);
+const byParent = new Map<number | null, typeof renderedComments>();
+
+for (const comment of renderedComments) {
+  const key = comment.parent_id ?? null;
+  byParent.set(key, [...(byParent.get(key) ?? []), comment]);
+}
+
+const topLevel = byParent.get(null) ?? [];
+
+function formatDate(value: string): string {
+  return value.slice(0, 16).replace('T', ' ');
+}
+---
+
+<section id="comments" class="not-prose mt-14 scroll-mt-24">
+  <div class="mb-5 flex items-end justify-between gap-4 border-t border-ink/10 pt-8">
+    <h2 class="font-display text-3xl font-bold text-ink">댓글</h2>
+    <span class="text-sm font-semibold text-ink/50">{renderedComments.length}</span>
+  </div>
+
+  {topLevel.length > 0 ? (
+    <div class="comment-thread space-y-4">
+      {topLevel.map((comment) => {
+        const replies = byParent.get(comment.id) ?? [];
+
+        return (
+          <article class="comment-card">
+            <header class="mb-3 flex flex-wrap items-center gap-3 text-sm">
+              <strong class="font-semibold text-ink">{comment.author_name}</strong>
+              <time class="text-xs text-ink/45" datetime={comment.created_at}>
+                {formatDate(comment.created_at)}
+              </time>
+            </header>
+            <div class="prose prose-pastel max-w-none text-sm" set:html={comment.html} />
+
+            {replies.length > 0 && (
+              <div class="comment-replies mt-4 space-y-4">
+                {replies.map((reply) => (
+                  <article class="comment-card">
+                    <header class="mb-3 flex flex-wrap items-center gap-3 text-sm">
+                      <strong class="font-semibold text-ink">{reply.author_name}</strong>
+                      <time class="text-xs text-ink/45" datetime={reply.created_at}>
+                        {formatDate(reply.created_at)}
+                      </time>
+                    </header>
+                    <div class="prose prose-pastel max-w-none text-sm" set:html={reply.html} />
+                  </article>
+                ))}
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  ) : (
+    <p class="comment-card text-center text-sm text-ink/60">아직 댓글이 없습니다.</p>
+  )}
+</section>

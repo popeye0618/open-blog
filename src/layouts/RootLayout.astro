@@ -1,0 +1,64 @@
+---
+import Footer from '@/components/Footer.astro';
+import Header from '@/components/Header.astro';
+import { getDb } from '@/db/client';
+import { getSetting, getSettings } from '@/lib/settings';
+import { getSiteUrl } from '@/lib/site-url';
+
+import '../styles/global.css';
+
+interface Props {
+	lang?: 'ko' | 'en';
+	title?: string;
+	description?: string;
+	ogImageSlug?: string;
+}
+
+const {
+	lang = 'ko',
+	title,
+	description,
+	ogImageSlug,
+} = Astro.props;
+
+const db = getDb(Astro.locals.runtime.env);
+const settings = await getSettings(db, Astro.locals);
+const siteTitle = getSetting(settings, 'site_title', 'popeye0618 blog');
+const siteDescription = getSetting(settings, 'site_description', '기술과 생각을 기록하는 곳');
+const pageDescription = description ?? siteDescription;
+const siteUrl = getSiteUrl(Astro.locals.runtime.env, Astro.request);
+const ogTitle = title ?? siteTitle;
+const ogType = ogImageSlug ? 'article' : 'website';
+const ogImagePath = ogImageSlug ? `/og/${encodeURIComponent(ogImageSlug)}.png` : '/og-default.png';
+const ogImageUrl = new URL(ogImagePath, siteUrl).toString();
+const ogUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const pageTitle = title ? `${title} · ${siteTitle}` : siteTitle;
+const footerMd = getSetting(settings, 'footer_md');
+const footerFallback = `© ${siteTitle}. Built with Astro + Cloudflare.`;
+---
+
+<!doctype html>
+<html lang={lang}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{pageTitle}</title>
+		<meta name="description" content={pageDescription} />
+		<link rel="alternate" type="application/rss+xml" title={`${siteTitle} RSS`} href="/rss.xml" />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:title" content={ogTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:url" content={ogUrl} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:site_name" content={siteTitle} />
+		<meta name="twitter:card" content="summary_large_image" />
+	</head>
+	<body>
+		<Header siteTitle={siteTitle} siteDescription={siteDescription} />
+		<main class="prose prose-pastel mx-auto max-w-3xl px-4 py-12">
+			<slot />
+		</main>
+		<Footer footerMd={footerMd} fallbackText={footerFallback} />
+	</body>
+</html>

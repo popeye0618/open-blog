@@ -1,0 +1,12 @@
+---
+import RootLayout from '@/layouts/RootLayout.astro';
+
+Astro.response.status = 404;
+---
+
+<RootLayout title="찾을 수 없는 페이지입니다">
+  <section class="not-prose rounded-lg border border-ink/10 bg-white/45 p-8 text-center shadow-soft">
+    <h1 class="font-display text-3xl font-bold text-ink">찾을 수 없는 페이지입니다</h1>
+    <a class="mt-5 inline-block font-semibold text-ink underline decoration-peach decoration-2 underline-offset-4" href="/">홈으로 돌아가기</a>
+  </section>
+</RootLayout>

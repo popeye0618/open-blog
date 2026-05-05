@@ -1,0 +1,102 @@
+---
+import DOMPurify from 'isomorphic-dompurify';
+
+import { getDb } from '@/db/client';
+import RootLayout from '@/layouts/RootLayout.astro';
+import { searchPublishedPosts } from '@/lib/posts';
+
+const db = getDb(Astro.locals.runtime.env);
+const url = new URL(Astro.request.url);
+const q = url.searchParams.get('q')?.trim() ?? '';
+const results = q ? await searchPublishedPosts(db, q) : [];
+
+function formatDate(value: string | null): string {
+  return value ? value.slice(0, 10).replaceAll('-', '.') : '';
+}
+
+function parseTags(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((tag) => typeof tag === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function sanitizeSnippet(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['mark'],
+    ALLOWED_ATTR: [],
+  });
+}
+---
+
+<RootLayout title="검색" description="블로그 글을 검색합니다.">
+  <section class="not-prose mb-10">
+    <p class="mb-3 text-sm font-semibold text-ink/55">Search</p>
+    <h1 class="font-display text-4xl font-bold leading-tight text-ink sm:text-5xl">
+      검색
+    </h1>
+  </section>
+
+  <form class="not-prose mb-8" action="/search" method="get" role="search">
+    <label class="sr-only" for="search-q">검색어</label>
+    <input
+      id="search-q"
+      class="w-full rounded-full border border-ink/10 bg-white/60 px-5 py-3 text-base text-ink placeholder:text-ink/45 outline-none shadow-soft transition focus:border-peach focus:ring-2 focus:ring-peach/50"
+      type="search"
+      name="q"
+      value={q}
+      placeholder="검색어를 입력해 주세요."
+      aria-label="검색"
+      autofocus
+    />
+  </form>
+
+  {q === '' ? (
+    <p class="not-prose rounded-lg border border-ink/10 bg-white/45 p-6 text-center text-ink/65 shadow-soft">
+      검색어를 입력해 주세요.
+    </p>
+  ) : (
+    <>
+      <p class="not-prose mb-5 text-sm font-semibold text-ink/60">
+        {results.length > 0 ? `${results.length}개의 결과` : '검색 결과가 없습니다.'}
+      </p>
+
+      <section class="not-prose space-y-4" aria-label="검색 결과">
+        {results.map((post) => {
+          const tags = parseTags(post.tags);
+          const date = formatDate(post.publishedAt);
+
+          return (
+            <article class="rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft">
+              <div class="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-ink/55">
+                {date && <time datetime={post.publishedAt ?? undefined}>{date}</time>}
+                <span class="rounded-full bg-mint/60 px-2 py-0.5 text-ink/70">{post.lang}</span>
+                {tags.map((tag) => (
+                  <a
+                    class="rounded-full bg-butter/70 px-2 py-0.5 text-ink/70 no-underline transition hover:bg-peach/70"
+                    href={`/tags/${encodeURIComponent(tag)}`}
+                  >
+                    #{tag}
+                  </a>
+                ))}
+              </div>
+
+              <h2 class="mb-2 font-display text-2xl font-bold leading-tight">
+                <a class="text-ink no-underline hover:decoration-peach hover:underline" href={`/posts/${post.slug}`}>
+                  {post.title}
+                </a>
+              </h2>
+
+              {post.description && <p class="mb-3 text-sm leading-6 text-ink/65">{post.description}</p>}
+              {post.snippet && (
+                <p class="text-sm leading-6 text-ink/75" set:html={sanitizeSnippet(post.snippet)} />
+              )}
+            </article>
+          );
+        })}
+      </section>
+    </>
+  )}
+</RootLayout>
