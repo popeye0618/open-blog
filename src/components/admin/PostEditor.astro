@@ -140,8 +140,18 @@ function toDatetimeLocal(value: string): string {
           type="url"
           name="coverImage"
           value={initial?.coverImage ?? ''}
+          data-cover-input
         />
       </label>
+
+      <div class="rounded-lg border border-ink/10 bg-white/40 p-3">
+        <p class="text-sm text-ink/50" data-cover-preview-message>이미지 URL을 입력하면 미리보기가 표시됩니다.</p>
+        <img
+          class="hidden max-h-48 w-full rounded-lg border border-ink/10 object-cover"
+          alt="커버 이미지 미리보기"
+          data-cover-preview-image
+        />
+      </div>
 
       <label class="flex items-center gap-2 text-sm font-semibold text-ink/70">
         <input class="h-4 w-4 rounded border-ink/20 text-ink focus:ring-peach" type="checkbox" name="pinned" checked={Boolean(initial?.pinned)} />
@@ -187,6 +197,9 @@ function toDatetimeLocal(value: string): string {
   const titleInput = document.querySelector('[data-title-input]');
   const slugInput = document.querySelector('[data-slug-input]');
   const bodyInput = document.querySelector('[data-body-input]');
+  const coverInput = document.querySelector('[data-cover-input]');
+  const coverPreviewImage = document.querySelector('[data-cover-preview-image]');
+  const coverPreviewMessage = document.querySelector('[data-cover-preview-message]');
   const preview = document.getElementById('preview');
   const errorMessage = document.querySelector('[data-error-message]');
   let slugTouched = Boolean(slugInput instanceof HTMLInputElement && slugInput.value);
@@ -218,6 +231,24 @@ function toDatetimeLocal(value: string): string {
       window.clearTimeout(previewTimer);
       previewTimer = window.setTimeout(renderPreview, 250);
     });
+  }
+
+  if (
+    coverInput instanceof HTMLInputElement &&
+    coverPreviewImage instanceof HTMLImageElement &&
+    coverPreviewMessage instanceof HTMLElement
+  ) {
+    coverPreviewImage.addEventListener('load', () => {
+      coverPreviewMessage.classList.add('hidden');
+      coverPreviewImage.classList.remove('hidden');
+    });
+
+    coverPreviewImage.addEventListener('error', () => {
+      showCoverPreviewMessage('이미지를 불러올 수 없습니다.');
+    });
+
+    coverInput.addEventListener('input', updateCoverPreview);
+    updateCoverPreview();
   }
 
   if (form instanceof HTMLFormElement) {
@@ -278,6 +309,49 @@ function toDatetimeLocal(value: string): string {
 
       showError('저장하지 못했습니다.');
     });
+  }
+
+  function updateCoverPreview() {
+    if (
+      !(coverInput instanceof HTMLInputElement) ||
+      !(coverPreviewImage instanceof HTMLImageElement) ||
+      !(coverPreviewMessage instanceof HTMLElement)
+    ) {
+      return;
+    }
+
+    const url = coverInput.value.trim();
+
+    if (!url) {
+      showCoverPreviewMessage('이미지 URL을 입력하면 미리보기가 표시됩니다.');
+      return;
+    }
+
+    try {
+      new URL(url);
+    } catch {
+      showCoverPreviewMessage('이미지를 불러올 수 없습니다.');
+      return;
+    }
+
+    coverPreviewImage.classList.add('hidden');
+    coverPreviewMessage.textContent = '이미지를 불러오는 중입니다.';
+    coverPreviewMessage.classList.remove('hidden');
+    coverPreviewImage.src = url;
+  }
+
+  function showCoverPreviewMessage(message) {
+    if (
+      !(coverPreviewImage instanceof HTMLImageElement) ||
+      !(coverPreviewMessage instanceof HTMLElement)
+    ) {
+      return;
+    }
+
+    coverPreviewImage.classList.add('hidden');
+    coverPreviewImage.removeAttribute('src');
+    coverPreviewMessage.textContent = message;
+    coverPreviewMessage.classList.remove('hidden');
   }
 
   function slugify(value) {
