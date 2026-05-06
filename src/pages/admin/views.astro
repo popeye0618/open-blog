@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '@/components/admin/AdminLayout.astro';
 import { getDb } from '@/db/client';
+import { formatKstDateTime } from '@/lib/datetime';
 import { listAllViewsWithPosts } from '@/lib/views';
 
 const db = getDb(Astro.locals.runtime.env);
@@ -47,7 +48,7 @@ const rows = await listAllViewsWithPosts(db);
                     value={row.count}
                   />
                 </td>
-                <td class="px-4 py-3 text-ink/60">{row.updated_at}</td>
+                <td class="px-4 py-3 text-ink/60">{formatKstDateTime(row.updated_at)}</td>
                 <td class="px-4 py-3">
                   <button class="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-ink/85" type="button" data-save-view={row.slug}>
                     Save

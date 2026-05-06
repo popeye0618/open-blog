@@ -6,6 +6,7 @@ import ViewCounter from '@/components/ViewCounter.astro';
 import { getDb } from '@/db/client';
 import RootLayout from '@/layouts/RootLayout.astro';
 import { listVisibleComments } from '@/lib/comments';
+import { formatKstDate } from '@/lib/datetime';
 import { getAdjacentPosts, getPostBySlug } from '@/lib/posts';
 import { extractToc, renderMarkdown } from '@/lib/markdown';
 import { getViewCount } from '@/lib/views';
@@ -25,12 +26,8 @@ const adjacent = post ? await getAdjacentPosts(db, post) : { prev: null, next: n
 const comments = post ? await listVisibleComments(db, post.id) : [];
 const turnstileSiteKey = Astro.locals.runtime.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
 const tags = post ? parseTags(post.tags) : [];
-const date = post?.publishedAt ? formatDate(post.publishedAt) : '';
+const date = formatKstDate(post?.publishedAt);
 const lang = post?.lang === 'en' ? 'en' : 'ko';
-
-function formatDate(value: string): string {
-  return value.slice(0, 10).replaceAll('-', '.');
-}
 
 function parseTags(value: string): string[] {
   try {

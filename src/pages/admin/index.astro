@@ -4,6 +4,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 
 import AdminLayout from '@/components/admin/AdminLayout.astro';
 import { getDb, schema } from '@/db/client';
+import { formatKstDateTime } from '@/lib/datetime';
 
 const db = getDb(Astro.locals.runtime.env);
 const { comments, posts } = schema;
@@ -154,7 +155,7 @@ async function countComments(status: 'visible' | 'hidden' | 'spam'): Promise<num
             >
               <span class="block text-sm font-semibold">{comment.authorName}</span>
               <span class="mt-1 block text-sm text-ink/65">{excerpt(comment.bodyMd, 30)}</span>
-              <span class="mt-1 block text-xs text-ink/45">{comment.postTitle ?? '(deleted)'} · {comment.createdAt}</span>
+              <span class="mt-1 block text-xs text-ink/45">{comment.postTitle ?? '(deleted)'} · {formatKstDateTime(comment.createdAt)}</span>
             </a>
           ))
         ) : (

@@ -3,16 +3,13 @@ import { DOMPurify } from '@/lib/sanitize';
 
 import { getDb } from '@/db/client';
 import RootLayout from '@/layouts/RootLayout.astro';
+import { formatKstDate } from '@/lib/datetime';
 import { searchPublishedPosts } from '@/lib/posts';
 
 const db = getDb(Astro.locals.runtime.env);
 const url = new URL(Astro.request.url);
 const q = url.searchParams.get('q')?.trim() ?? '';
 const results = q ? await searchPublishedPosts(db, q) : [];
-
-function formatDate(value: string | null): string {
-  return value ? value.slice(0, 10).replaceAll('-', '.') : '';
-}
 
 function parseTags(value: string): string[] {
   try {
@@ -66,7 +63,7 @@ function sanitizeSnippet(html: string): string {
       <section class="not-prose space-y-4" aria-label="검색 결과">
         {results.map((post) => {
           const tags = parseTags(post.tags);
-          const date = formatDate(post.publishedAt);
+          const date = formatKstDate(post.publishedAt);
 
           return (
             <article class="rounded-lg border border-ink/10 bg-white/50 p-5 shadow-soft">

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 
 import { getDb } from '@/db/client';
+import { formatKstDate } from '@/lib/datetime';
 import { renderOgImage } from '@/lib/og';
 import { getPostBySlug } from '@/lib/posts';
 import { getSetting, getSettings } from '@/lib/settings';
@@ -22,7 +23,7 @@ export const GET: APIRoute = async ({ locals, params, request }) => {
     title: post.title,
     siteTitle,
     lang: post.lang === 'en' ? 'en' : 'ko',
-    date: post.publishedAt?.slice(0, 10),
+    date: formatKstDate(post.publishedAt),
     assetBaseUrl: siteUrl,
   });
 

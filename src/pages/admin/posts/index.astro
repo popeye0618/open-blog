@@ -4,6 +4,7 @@ import { and, desc, isNotNull, isNull, like, lte, or, sql } from 'drizzle-orm';
 
 import AdminLayout from '@/components/admin/AdminLayout.astro';
 import { getDb, schema } from '@/db/client';
+import { formatKstDateTime } from '@/lib/datetime';
 
 const db = getDb(Astro.locals.runtime.env);
 const { posts } = schema;
@@ -109,8 +110,8 @@ function statusLabel(value: 'published' | 'scheduled' | 'draft'): string {
                     <span class="rounded-full bg-butter/70 px-2.5 py-1 text-xs font-bold text-ink/65">{statusLabel(rowStatus)}</span>
                   </td>
                   <td class="px-4 py-3">{post.lang}</td>
-                  <td class="px-4 py-3 text-ink/65">{post.publishedAt ?? '—'}</td>
-                  <td class="px-4 py-3 text-ink/65">{post.updatedAt}</td>
+                  <td class="px-4 py-3 text-ink/65">{post.publishedAt ? formatKstDateTime(post.publishedAt) : '—'}</td>
+                  <td class="px-4 py-3 text-ink/65">{formatKstDateTime(post.updatedAt)}</td>
                   <td class="px-4 py-3">
                     <div class="flex gap-2">
                       <a class="font-bold text-ink underline decoration-peach decoration-2 underline-offset-4" href={`/admin/posts/${post.id}/edit`}>Edit</a>

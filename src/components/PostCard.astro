@@ -1,4 +1,5 @@
 ---
+import { formatKstDate } from '@/lib/datetime';
 import type { PostSummary } from '@/lib/posts';
 
 interface Props {
@@ -6,12 +7,8 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const date = post.publishedAt ? formatDate(post.publishedAt) : '';
+const date = formatKstDate(post.publishedAt);
 const tags = parseTags(post.tags);
-
-function formatDate(value: string): string {
-  return value.slice(0, 10).replaceAll('-', '.');
-}
 
 function parseTags(value: string): string[] {
   try {
